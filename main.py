@@ -83,7 +83,7 @@ class DataFlowSubmitter(object):
         self.table_spec = args.table_spec
         self.partition_field = args.partition_field
         self.requirements = args.requirements
-        self.docker_registry_url = args.docker_registry_url
+        self.docker_image_path = args.docker_image_path
 
         if args.direct_runner and args.dataflow_runner:
             raise ValueError(
@@ -102,9 +102,7 @@ class DataFlowSubmitter(object):
             f"--temp_location=gs://{self.bucket}/text_parsing/temp/",
             f"--requirements_file={self.requirements}",
             "--region=us-central1",
-            "--prebuild_sdk_container_engine=cloud_build",
-            f"--docker_registry_push_url={self.docker_registry_url}",
-            "--sdk_location=container",
+            f"--sdk_container_image={self.docker_image_path}",
             f"--runner={self.runner}",
         ]
         with beam.Pipeline(argv=argv) as pipeline:
@@ -145,7 +143,7 @@ def main():
         "--requirements", type=str, required=True, help="Path to requirements file"
     )
     parser.add_argument(
-        "--docker-registry-url", type=str, required=True, help="Docker registry url"
+        "--docker-image-path", type=str, required=True, help="Docker image path"
     )
     parser.add_argument("--direct-runner", required=False, action="store_true")
     parser.add_argument("--dataflow-runner", required=False, action="store_true")
