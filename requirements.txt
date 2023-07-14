@@ -1,2 +1,2 @@
 bigquery-schema-generator==1.5.1
-apache-beam[gcp]==2.4.8
+apache-beam[gcp]==2.48.0

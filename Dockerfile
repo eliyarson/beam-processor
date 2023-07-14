@@ -1,7 +1,8 @@
 FROM python:3.10-slim
 
 # Install SDK.
-RUN pip install --no-cache-dir apache-beam[gcp]==2.48.0 bigquery-schema-generator==1.5.1
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Verify that the image does not have conflicting dependencies.
 RUN pip check

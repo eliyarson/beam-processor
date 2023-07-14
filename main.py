@@ -82,7 +82,6 @@ class DataFlowSubmitter(object):
         self.input_path = args.input_path
         self.table_spec = args.table_spec
         self.partition_field = args.partition_field
-        self.requirements = args.requirements
         self.docker_image_path = args.docker_image_path
 
         if args.direct_runner and args.dataflow_runner:
@@ -100,9 +99,10 @@ class DataFlowSubmitter(object):
             f'--job_name=text-parsing-{datetime.now().strftime("%Y%m%d-%H%M%S")}',
             f"--staging_location=gs://{self.bucket}/text_parsing/staging/",
             f"--temp_location=gs://{self.bucket}/text_parsing/temp/",
-            f"--requirements_file={self.requirements}",
             "--region=us-central1",
+            "--experiments=use_runner_v2",
             f"--sdk_container_image={self.docker_image_path}",
+            "--sdk_location=container",
             f"--runner={self.runner}",
         ]
         with beam.Pipeline(argv=argv) as pipeline:
@@ -138,9 +138,6 @@ def main():
     parser.add_argument("--table-spec", type=str, required=True, help="Table path")
     parser.add_argument(
         "--partition-field", type=str, required=True, help="Table partition field"
-    )
-    parser.add_argument(
-        "--requirements", type=str, required=True, help="Path to requirements file"
     )
     parser.add_argument(
         "--docker-image-path", type=str, required=True, help="Docker image path"
