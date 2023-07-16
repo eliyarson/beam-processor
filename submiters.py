@@ -5,7 +5,7 @@ import apache_beam as beam
 from apache_beam.pvalue import _make_Row
 from apache_beam.dataframe.io import read_csv
 from apache_beam.dataframe.convert import to_pcollection
-from processors import NdJsonProcessor, ParseSchema, BigQueryWriter, CsvProcessorFn
+from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn
 
 class DataFlowSubmitter(object):
     def __init__(self, args: Namespace):
@@ -52,7 +52,7 @@ class DataFlowSubmitter(object):
                     | "Read CSV" >> read_csv(self.input_path)
                 )
                 pc = to_pcollection(source_df)
-                pc = pc | "Convert to Dict" >> beam.Map(lambda x: x._asdict())
+                pc = pc | "Process" >> beam.ParDo(CsvProcessorFn())
 
             else:
                 raise ValueError("Please Select a valid source format (ndjson, csv)")
@@ -62,5 +62,4 @@ class DataFlowSubmitter(object):
                 table_spec=self.table_spec,
                 method="batch_load",
                 partition_field=self.partition_field,
-                # schema_side_input=beam.pvalue.AsList(schema),
             )

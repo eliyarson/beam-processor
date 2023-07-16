@@ -19,8 +19,7 @@ class NdJsonProcessor(beam.DoFn):
 
 class CsvProcessorFn(beam.DoFn):
     def process(self, element):
-        print(element)
-        yield element
+        yield element._asdict()
 
 class ParseSchema(beam.DoFn):
     def __init__(self):
