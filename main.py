@@ -20,7 +20,7 @@ def main():
     )
     parser.add_argument("--table-spec", type=str, required=True, help="Table path")
     parser.add_argument(
-        "--partition-field", type=str, required=True, help="Table partition field"
+        "--partition-field", type=str, required=False, help="Table partition field"
     )
     parser.add_argument(
         "--docker-image-path", type=str, required=True, help="Docker image path"

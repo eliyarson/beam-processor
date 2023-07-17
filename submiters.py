@@ -2,10 +2,11 @@ from argparse import Namespace
 from datetime import datetime
 import json
 import apache_beam as beam
-from apache_beam.pvalue import _make_Row
+from apache_beam.pvalue import AsIter
 from apache_beam.dataframe.io import read_csv
 from apache_beam.dataframe.convert import to_pcollection
-from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn
+from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn, AddSchemaFn
+from apache_beam.io.gcp.internal.clients import bigquery
 
 class DataFlowSubmitter(object):
     def __init__(self, args: Namespace):
@@ -36,7 +37,7 @@ class DataFlowSubmitter(object):
             "--experiments=use_runner_v2",
             f"--sdk_container_image={self.docker_image_path}",
             "--sdk_location=container",
-            "--save_main_session",
+            # "--save_main_session",
             f"--runner={self.runner}",
         ]
         with beam.Pipeline(argv=argv) as pipeline:
@@ -53,7 +54,6 @@ class DataFlowSubmitter(object):
                 )
                 pc = to_pcollection(source_df)
                 pc = pc | "Process" >> beam.ParDo(CsvProcessorFn())
-
             else:
                 raise ValueError("Please Select a valid source format (ndjson, csv)")
             
