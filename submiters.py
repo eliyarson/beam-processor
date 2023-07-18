@@ -53,7 +53,8 @@ class DataFlowSubmitter(object):
                     | "Read CSV" >> read_csv(self.input_path)
                 )
                 pc = to_pcollection(source_df)
-                pc = pc | "Process" >> beam.ParDo(CsvProcessorFn())
+                pc = pc | "Process" >> beam.ParDo(CsvProcessorFn()) | "Add schema" >> beam.ParDo(AddSchemaFn()) | beam.Map(print)
+                pc_side_input = beam.pvalue.AsDict(pc)
             else:
                 raise ValueError("Please Select a valid source format (ndjson, csv)")
             
@@ -61,5 +62,6 @@ class DataFlowSubmitter(object):
             pc | "Write to BQ" >> BigQueryWriter(
                 table_spec=self.table_spec,
                 method="batch_load",
+                side_input=pc_side_input,
                 partition_field=self.partition_field,
             )
