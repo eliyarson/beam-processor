@@ -1,3 +1,5 @@
 bigquery-schema-generator==1.5.1
 apache-beam[gcp,dataframe]==2.48.0
 pandas==1.5.3
+fsspec
+gcsfs

@@ -7,7 +7,7 @@ from apache_beam.internal.gcp.json_value import to_json_value
 from bigquery_schema_generator.generate_schema import SchemaGenerator
 from typing import Dict
 import pyarrow as pa
-
+import pandas as pd
 
 
 class NdJsonProcessor(beam.DoFn):
@@ -27,6 +27,20 @@ class CsvProcessorFn(beam.DoFn):
         record = element._asdict()
         record["dataflow_ingested_at"] = datetime.utcnow()
         yield record
+
+class ParquetFn(beam.DoFn):
+    def __init__(self, input_path):
+        self.input_path = input_path
+    def process(self,batch):
+        print(batch)
+        df = pd.DataFrame(data=batch)
+        print(df)
+        print(self.input_path)
+        file_path = f"{self.input_path.split('*.csv')[0]}{df['dataflow_ingested_at'].max()}.parquet"
+        file_path = file_path.replace("csv","parquet")
+        print(file_path)
+        df.to_parquet(path=file_path)
+
 
 class ParquetWriter(beam.PTransform):
     def __init__(self,file_path_prefix):

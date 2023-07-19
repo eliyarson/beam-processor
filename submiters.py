@@ -5,8 +5,9 @@ import apache_beam as beam
 from apache_beam.pvalue import AsIter
 from apache_beam.dataframe.io import read_csv
 from apache_beam.dataframe.convert import to_pcollection
-from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn, AddSchemaFn
+from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn, AddSchemaFn, ParquetFn
 from apache_beam.io.gcp.internal.clients import bigquery
+from random import randint
 
 class DataFlowSubmitter(object):
     def __init__(self, args: Namespace):
@@ -53,15 +54,20 @@ class DataFlowSubmitter(object):
                     | "Read CSV" >> read_csv(self.input_path)
                 )
                 pc = to_pcollection(source_df)
-                pc = pc | "Process" >> beam.ParDo(CsvProcessorFn()) | "Add schema" >> beam.ParDo(AddSchemaFn()) | beam.Map(print)
-                pc_side_input = beam.pvalue.AsDict(pc)
+                pc = (pc
+                       | "Process" >> beam.ParDo(CsvProcessorFn())
+                        | "Add Dummy Key" >> beam.Map(lambda elem: (None, elem))
+                        | "Groupby" >> beam.GroupByKey()
+                        | "Abandon Dummy Key" >> beam.MapTuple(lambda _, val: val)
+                        | "DF" >> beam.ParDo(ParquetFn(input_path=self.input_path))
+                        )
             else:
                 raise ValueError("Please Select a valid source format (ndjson, csv)")
             
 
-            pc | "Write to BQ" >> BigQueryWriter(
-                table_spec=self.table_spec,
-                method="batch_load",
-                side_input=pc_side_input,
-                partition_field=self.partition_field,
-            )
+            # pc | "Write to BQ" >> BigQueryWriter(
+            #     table_spec=self.table_spec,
+            #     method="batch_load",
+            #     side_input=pc_side_input,
+            #     partition_field=self.partition_field,
+            # )
