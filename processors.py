@@ -32,11 +32,15 @@ class ParquetFn(beam.DoFn):
     def __init__(self, input_path):
         self.input_path = input_path
     def process(self,batch):
-        print(batch)
         df = pd.DataFrame(data=batch)
-        print(df)
-        print(self.input_path)
-        file_path = f"{self.input_path.split('*.csv')[0]}{df['dataflow_ingested_at'].max()}.parquet"
+        prefix = self.input_path.split('*.csv')[0]
+        partition_timestamp_max = df["dataflow_ingested_at"].max()
+        year = f'year={partition_timestamp_max.year}'
+        month = f'month={partition_timestamp_max.month}'
+        day = f'day={partition_timestamp_max.day}'
+        hour = f'hour={partition_timestamp_max.hour}'
+        file_path = f"{prefix}test/{year}/{month}/{day}/{hour}/test{df['dataflow_ingested_at'].min()}-{partition_timestamp_max}.parquet"
+        print(year)
         file_path = file_path.replace("csv","parquet")
         print(file_path)
         df.to_parquet(path=file_path)
