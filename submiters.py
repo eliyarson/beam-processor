@@ -59,7 +59,7 @@ class DataFlowSubmitter(object):
                         | "Add Dummy Key" >> beam.Map(lambda elem: (None, elem))
                         | "Groupby" >> beam.GroupByKey()
                         | "Abandon Dummy Key" >> beam.MapTuple(lambda _, val: val)
-                        | "DF" >> beam.ParDo(ParquetFn(input_path=self.input_path))
+                        | "Write to Parquet" >> beam.ParDo(ParquetFn(input_path=self.input_path))
                         )
             else:
                 raise ValueError("Please Select a valid source format (ndjson, csv)")
