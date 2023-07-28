@@ -10,6 +10,15 @@ import pyarrow as pa
 import pandas as pd
 
 
+class PubSubProcessor(beam.DoFn):
+    def __init__(self):
+        return None
+
+    def process(self, element):
+        message = json.loads(element)
+        print(message)
+        yield message["path"]
+
 class NdJsonProcessor(beam.DoFn):
     def __init__(self):
         return None
@@ -18,8 +27,9 @@ class NdJsonProcessor(beam.DoFn):
         items = batch.split("\n")
         for item in items:
             js = json.loads(item)
-            record = js[0]
+            record = js
             record["dataflow_ingested_at"] = datetime.utcnow()
+            print(record)
             yield record
 
 class CsvProcessorFn(beam.DoFn):

@@ -5,7 +5,7 @@ import apache_beam as beam
 from apache_beam.pvalue import AsIter
 from apache_beam.dataframe.io import read_csv
 from apache_beam.dataframe.convert import to_pcollection
-from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn, AddSchemaFn, ParquetFn
+from processors import NdJsonProcessor, BigQueryWriter, CsvProcessorFn, AddSchemaFn, ParquetFn, PubSubProcessor
 from apache_beam.io.gcp.internal.clients import bigquery
 from random import randint
 
@@ -18,6 +18,10 @@ class DataFlowSubmitter(object):
         self.partition_field = args.partition_field
         self.docker_image_path = args.docker_image_path
         self.source_format = args.source_format
+        if self.source_format == "pubsub":
+            self.streaming = True
+        else:
+            self.streaming = False
 
         if args.direct_runner and args.dataflow_runner:
             raise ValueError(
@@ -41,8 +45,18 @@ class DataFlowSubmitter(object):
             # "--save_main_session",
             f"--runner={self.runner}",
         ]
+        if self.streaming:
+            argv.append("--streaming")
         with beam.Pipeline(argv=argv) as pipeline:
-            if self.source_format == "ndjson":
+            if self.source_format =="pubsub":
+                pc = (
+                    pipeline
+                    | "Read from Pubsub" >> beam.io.ReadFromPubSub(subscription="")
+                    | "Process" >> beam.ParDo(PubSubProcessor())
+                    # | "Read text file" >> beam.io.ReadFromText()
+                    # | "Process" >> beam.ParDo(NdJsonProcessor())
+                )
+            elif self.source_format == "ndjson":
                 pc = (
                     pipeline
                     | "Read text file" >> beam.io.ReadFromText(self.input_path)
